@@ -19,6 +19,17 @@ def makevar(path, var, *args):
         else:
             return None
 
+def parsemoved(portsdir):
+    moved = {}
+    for line in open(os.path.join(portsdir, 'MOVED')):
+        if line.startswith('#'):
+            continue
+        fields = line.split('|')
+        if len(fields) != 4:
+            continue
+        moved[fields[0]] = fields[1]
+    return moved
+
 def formatopt(opt):
     if opt in disopts:
         return '-' + opt
@@ -42,20 +53,27 @@ if not os.path.isdir(args.PORT_DBDIR):
 stale = []
 errors = []
 delta = {}
+moved = parsemoved(args.PORTSDIR)
+movedto = {}
 for d in os.listdir(args.PORT_DBDIR):
     if '_' not in d:
         stale.append(d)
         continue
     (category, port) = d.split('_', 1)
-    portdir = os.path.join(args.PORTSDIR, category, port)
     portname = category + '/' + port
+    firstname = portname
+    while portname in moved and moved[portname]:
+        portname = moved[portname]
+    portdir = os.path.join(args.PORTSDIR, portname)
     if not os.path.isdir(portdir):
-        stale.append(portname)
+        stale.append(firstname)
         continue
-    defopts = makevar(portdir, 'PORT_OPTIONS', 'PORT_DBDIR=/nonexistent')
-    curopts = makevar(portdir, 'PORT_OPTIONS', 'PORT_DBDIR=%s' % (args.PORT_DBDIR))
+    defopts = makevar(portdir, 'PORT_OPTIONS', 'PORT_DBDIR=/nonexistent',
+                      'OPTIONS_NAME=' + d)
+    curopts = makevar(portdir, 'PORT_OPTIONS',
+                      'PORT_DBDIR=%s' % (args.PORT_DBDIR), 'OPTIONS_NAME=' + d)
     if defopts is None or curopts is None:
-        errors.append(portname)
+        errors.append(firstname)
         continue
     defset = set(defopts.split())
     curset = set(curopts.split())
@@ -63,7 +81,9 @@ for d in os.listdir(args.PORT_DBDIR):
         continue
     disopts = defset - curset
     deltas = sorted(list(curset - defset) + list(disopts))
-    delta[portname] = map(formatopt, deltas)
+    delta[firstname] = map(formatopt, deltas)
+    if (firstname != portname):
+        movedto[firstname] = portname
 
 if stale:
     print "Stale options:"
@@ -76,7 +96,11 @@ if errors:
 if delta:
     print "Custom options:"
     for p in sorted(delta.keys()):
-        print "\t%s: %s" % (p, ", ".join(delta[p]))
+        opts = ", ".join(delta[p])
+        if p in movedto:
+            print "\t%s -> %s: %s" % (p, movedto[p], opts)
+        else:
+            print "\t%s: %s" % (p, opts)
 
     
     

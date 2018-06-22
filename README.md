@@ -32,5 +32,7 @@ Custom options:
         sysutils/apcupsd: +CGI
         x11-drivers/xorg-drivers: +INTEL, +NV
         x11-fonts/webfonts: +CLEARTYPE, +EXTRAFONTS
+        x11/kde4-workspace -> x11/kde-workspace-kde4: -GLES, -GPS, -KACTIVITY, -UPOWER, -VLC, -WALLPAPERS
+        x11/kdelibs4 -> x11/kdelibs-kde4: -AVAHI
         x11/xterm: +DABBREV
 ```
