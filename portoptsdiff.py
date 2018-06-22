@@ -53,7 +53,7 @@ for d in os.listdir(args.PORT_DBDIR):
         stale.append(portname)
         continue
     defopts = makevar(portdir, 'PORT_OPTIONS', 'PORT_DBDIR=/nonexistent')
-    curopts = makevar(portdir, 'PORT_OPTIONS')
+    curopts = makevar(portdir, 'PORT_OPTIONS', 'PORT_DBDIR=%s' % (args.PORT_DBDIR))
     if defopts is None or curopts is None:
         errors.append(portname)
         continue
