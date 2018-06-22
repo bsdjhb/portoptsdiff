@@ -18,4 +18,19 @@ option database:
 PORTSTREE METHOD TIMESTAMP           PATH
 ports     -                          /usr/ports
 > python portoptsdiff.py /usr/ports /usr/local/etc/poudriere.d/ports-options
+Custom options:
+        accessibility/redshift: +GUI, +VIDMODE
+        devel/aarch64-binutils: -STATIC
+        devel/cscope: +XCSCOPE
+        editors/emacs: -MAILUTILS
+        graphics/libpotrace: -A4
+        math/gmp: +CPU_OPTS
+        math/openblas: +DYNAMIC_ARCH
+        net/wireshark: -GTK3, +QT5
+        security/pinentry: +QT5, -TTY
+        security/vpnc: +SSL
+        sysutils/apcupsd: +CGI
+        x11-drivers/xorg-drivers: +INTEL, +NV
+        x11-fonts/webfonts: +CLEARTYPE, +EXTRAFONTS
+        x11/xterm: +DABBREV
 ```
