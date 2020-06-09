@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Report what port options do not match the defaults.
 #
@@ -15,7 +15,7 @@ def makevar(path, var, *args):
                              stderr=devnull, stdout=subprocess.PIPE)
         data = p.communicate()[0]
         if p.returncode == 0:
-            return data.strip()
+            return data.decode('utf-8').strip()
         else:
             return None
 
@@ -30,25 +30,18 @@ def parsemoved(portsdir):
         moved[fields[0]] = fields[1]
     return moved
 
-def formatopt(opt):
-    if opt in disopts:
-        return '-' + opt
-    else:
-        return '+' + opt
-
 parser = argparse.ArgumentParser(description='Compare port options')
 parser.add_argument('PORTSDIR', nargs='?', default='/usr/ports')
 parser.add_argument('PORT_DBDIR', nargs='?', default=None)
 args = parser.parse_args()
 if not os.path.isdir(os.path.join(args.PORTSDIR, 'Mk')):
-    print >> sys.stderr, "%s is not a valid ports tree" % (args.PORTSDIR)
+    print(args.PORTSDIR, "is not a valid ports tree", file=sys.stderr)
     sys.exit(1)
 if not args.PORT_DBDIR:
     args.PORT_DBDIR = makevar(os.path.join(args.PORTSDIR, 'ports-mgmt', 'pkg'), 
                               'PORT_DBDIR')
 if not os.path.isdir(args.PORT_DBDIR):
-    print >> sys.stderr, "%s is not a ports database directory" % \
-        (args.PORT_DBDIR)
+    print(args.PORT_DBDIR, "is not a ports database directory", file=sys.stderr)
 
 stale = []
 errors = []
@@ -81,26 +74,31 @@ for d in os.listdir(args.PORT_DBDIR):
         continue
     disopts = defset - curset
     deltas = sorted(list(curset - defset) + list(disopts))
-    delta[firstname] = map(formatopt, deltas)
+    delta[firstname] = list()
+    for opt in deltas:
+        if opt in disopts:
+            delta[firstname].append('-' + opt)
+        else:
+            delta[firstname].append('+' + opt)
     if (firstname != portname):
         movedto[firstname] = portname
 
 if stale:
-    print "Stale options:"
+    print("Stale options:")
     for p in sorted(stale):
-        print '\t', p
+        print("\t%s" % (p))
 if errors:
-    print "Unable to parse:"
+    print("Unable to parse:")
     for p in sorted(errors):
-        print '\t', p
+        print("\t%s" % (p))
 if delta:
-    print "Custom options:"
+    print("Custom options:")
     for p in sorted(delta.keys()):
         opts = ", ".join(delta[p])
         if p in movedto:
-            print "\t%s -> %s: %s" % (p, movedto[p], opts)
+            print("\t%s -> %s: %s" % (p, movedto[p], opts))
         else:
-            print "\t%s: %s" % (p, opts)
+            print("\t%s: %s" % (p, opts))
 
     
     
